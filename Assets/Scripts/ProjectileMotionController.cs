@@ -1,12 +1,14 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using Assets.Scripts;
 using UnityEngine;
+
 
 public class ProjectileMotionController : MonoBehaviour
 {
     public float _force;
 
     private Rigidbody _rb;
+
+    public GameController _gameController;
 
 
     // Start is called before the first frame update
@@ -16,22 +18,25 @@ public class ProjectileMotionController : MonoBehaviour
         tag = "projectile";
     }
 
+    public void Reset()
+    {
+        _force = 0;
+        _rb.velocity = Vector3.zero;
+    }
+
     public void OnTriggerEnter(Collider other)
     {
         if (other.tag != "initiator")
             return;
 
-        _force = 0;
-        _rb.velocity = Vector3.zero;
+        Reset();
     }
 
     private void FixedUpdate()
     {
-        _rb.AddForce(new Vector3(0, 0, _force));
-    }
+        //if (_gameController.GameState == GameState.Idle)
+        //    return;
 
-    // Update is called once per frame
-    void Update()
-    {
+        _rb.AddForce(new Vector3(0, 0, _force));
     }
 }

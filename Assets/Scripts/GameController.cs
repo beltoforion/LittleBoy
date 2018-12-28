@@ -1,11 +1,19 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Assets.Scripts;
+
 
 public class GameController : MonoBehaviour
 {
+    private GameState _gameState = GameState.Idle;
+
+    public GameState GameState
+    {
+        get { return _gameState; }
+        set { _gameState = value; }
+    }
+
     public float _atomSize;
 
     public float _atomDist;
@@ -21,8 +29,6 @@ public class GameController : MonoBehaviour
     internal uint _atomCount = 0;
 
     internal uint _atomCollisionCount = 0;
-
-    public bool _simulationIsOver = false;
 
     // Start is called before the first frame update
     void Start()
@@ -41,24 +47,24 @@ public class GameController : MonoBehaviour
         return _atomCount;
     }
 
-
     // Update is called once per frame
     void Update()
     {
         Debug.Log(string.Format("Atoms alive={0}; Collisions={1}; dt={2}", _atomCount, _atomCollisionCount, Time.deltaTime));
 
-        if (_simulationIsOver)
-        {
-            _simulationIsOver = false;
-            Invoke("Restart", 1);
-        }
+        //if (_simulationIsOver)
+        //{
+        //    _simulationIsOver = false;
+        //    Invoke("Restart", 1);
+        //}
     }
 
-    void Restart()
+    public void Restart()
     {
         _atomCount = 0;
         _totalAtomCount = 0;
         _atomCollisionCount = 0;
+        _gameState = GameState.Running;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 }

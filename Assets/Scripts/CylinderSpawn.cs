@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class CylinderSpawn : MonoBehaviour
 {
+    public GameController _gameController;
+
     /// <summary>
     /// Outter radius of the cylinder
     /// </summary>
@@ -26,8 +28,6 @@ public class CylinderSpawn : MonoBehaviour
 
     public GameObject _physicsParent;
 
-    private GameController _setupScript;
-
     private static void SetGlobalScale(Transform transform, Vector3 globalScale)
     {
         transform.localScale = Vector3.one;
@@ -37,9 +37,8 @@ public class CylinderSpawn : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        _setupScript = GetComponentInParent<GameController>();
-        var dist = _setupScript._atomDist;
-        var size = _setupScript._atomSize;
+        var dist = _gameController._atomDist;
+        var size = _gameController._atomSize;
 
         var v1 = Mathf.PI * Mathf.Pow(_innerRadius, 2) * _length;
         var v2 = Mathf.PI * Mathf.Pow(_outterRadius, 2) * _length;

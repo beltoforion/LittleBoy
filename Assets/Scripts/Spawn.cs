@@ -15,14 +15,9 @@ public class Spawn : MonoBehaviour
 
     public float _atomRadius = 0.02f;
 
-    private GameController _setupScript;
-
     // Use this for initialization
     void Start()
     {
-        _setupScript = GetComponentInParent<GameController>();
-        Assert.IsNotNull(_setupScript, "Setup Script not found on parent!");
-
         _spawnRadius = gameObject.transform.localScale.x / 2;
         _spawnPos = transform;
 

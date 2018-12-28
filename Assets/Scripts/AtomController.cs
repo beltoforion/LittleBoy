@@ -1,7 +1,7 @@
 ﻿using System;
-
 using UnityEngine;
 using UnityEngine.Assertions;
+using Assets.Scripts;
 
 
 using Random = UnityEngine.Random;
@@ -10,32 +10,6 @@ using Random = UnityEngine.Random;
 
 public class AtomController : MonoBehaviour
 {
-
-    enum AtomState
-    {
-        /// <summary>
-        /// Atom is created but does not decay
-        /// </summary>
-        Inactive,
-
-        /// <summary>
-        /// Atom is subject to decay
-        /// </summary>
-        Alive,
-
-        /// <summary>
-        /// Atom will decay in the next timestep
-        /// </summary>
-        AboutToDecay,
-
-        Decaying,
-
-        /// <summary>
-        /// Atom is decayed
-        /// </summary>
-        Decayed
-    };
-
     ///// <summary>
     /////     Probability of a decay per second
     ///// </summary>
@@ -52,11 +26,9 @@ public class AtomController : MonoBehaviour
 
     private long _id = 0;
 
-    private float _elapsedTime = 0;
-
     private GameObject[] _neutron = { null, null };
 
-    private GameController _setupScript;
+    private GameController _gameController;
 
     private static void SetGlobalScale(Transform transform, Vector3 globalScale)
     {
@@ -66,43 +38,46 @@ public class AtomController : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
+        //if (_gameController==null || _gameController.GameState == GameState.Idle)
+        //    return;
+
         if (collision.collider.tag != "neutron")
             return;
 
-        //        Debug.Log(string.Format("Collosion with {0}", collision.gameObject.name));
         if (_state == AtomState.Alive)
         {
             _state = AtomState.AboutToDecay;
-            _setupScript._atomCollisionCount++;
+            _gameController._atomCollisionCount++;
         }
     }
 
     public void OnTriggerEnter(Collider other)
     {
+        //if (_gameController==null || _gameController.GameState == GameState.Idle)
+        //    return;
+
         if (other.tag != "neutron")
             return;
 
         if (_state == AtomState.Alive)
         {
             _state = AtomState.AboutToDecay;
-            _setupScript._atomCollisionCount++;
+            _gameController._atomCollisionCount++;
         }
-    }
-
-    private void Setup()
-    {
-
     }
 
     void Start()
     {
-        _setupScript = GetComponentInParent<GameController>();
-        Assert.IsNotNull(_setupScript, "Setup Script not found on parent!");
+        var go = GameObject.Find("GameManager");
+        Assert.IsNotNull(go);
 
-        _decayProbability = _setupScript._decayProbability;
-        _neutronPathLength = _setupScript._neutronPathLength;
+        _gameController = go.GetComponent("GameController") as GameController;
+        Assert.IsNotNull(_gameController);
 
-        _id = _setupScript.IncAtomCount();
+        _decayProbability = _gameController._decayProbability;
+        _neutronPathLength = _gameController._neutronPathLength;
+
+        _id = _gameController.IncAtomCount();
 
         const float deg2Rad = Mathf.PI / 180;
 
@@ -150,7 +125,8 @@ public class AtomController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        _elapsedTime += Time.deltaTime;
+        //if (_gameController.GameState == GameState.Idle)
+        //    return;
 
         // Probability of a decay in the last frame cycle
         var prob = Mathf.Pow((1 - _decayProbability), Time.deltaTime);
@@ -169,7 +145,7 @@ public class AtomController : MonoBehaviour
 
             case AtomState.Decaying:
                 Destroy(this.gameObject);
-                _setupScript.DecAtomCount();
+                _gameController.DecAtomCount();
                 _state = AtomState.Decayed;
                 break;
 
