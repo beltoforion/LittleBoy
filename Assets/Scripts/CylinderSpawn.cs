@@ -1,6 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+using UnityEngine.Assertions;
 
 public class CylinderSpawn : MonoBehaviour
 {
@@ -28,15 +27,47 @@ public class CylinderSpawn : MonoBehaviour
 
     public GameObject _physicsParent;
 
+    private Vector3 _startPosition;
+
+    private int _numberOfAtoms = 0;
+
+    public int NumberOfAtoms
+    {
+        get
+        {
+            return _numberOfAtoms;
+        }
+    }
+
     private static void SetGlobalScale(Transform transform, Vector3 globalScale)
     {
         transform.localScale = Vector3.one;
         transform.localScale = new Vector3(globalScale.x / transform.lossyScale.x, globalScale.y / transform.lossyScale.y, globalScale.z / transform.lossyScale.z);
     }
 
-    // Start is called before the first frame update
-    void Start()
+    /// <summary>
+    /// Reset the cylinder to its start position and repopulate it
+    /// </summary>
+    public void ResetAtomsAndPosition()
     {
+        if (_physicsParent == null)
+            return;
+
+        foreach(Transform child in _physicsParent.transform)
+        {
+            GameObject.Destroy(child.gameObject);
+        }
+
+        _numberOfAtoms = 0;
+        Spawn();
+
+        _physicsParent.transform.position = _startPosition;
+    }
+
+    private void Spawn()
+    {
+        Assert.IsNotNull(_physicsParent);
+
         var dist = _gameController._atomDist;
         var size = _gameController._atomSize;
 
@@ -47,7 +78,7 @@ public class CylinderSpawn : MonoBehaviour
 
         Debug.Log(string.Format("Spawn Cylinder: vi={0}; vo={1}; v={2}", v1, v2, volume));
 
-        for (float zp = -_length/2; zp <= _length/2; zp += dist)
+        for (float zp = -_length / 2; zp <= _length / 2; zp += dist)
         {
             for (float yp = -_outterRadius; yp <= _outterRadius; yp += dist)
             {
@@ -60,18 +91,20 @@ public class CylinderSpawn : MonoBehaviour
                     if (r < _innerRadius)
                         continue;
 
-                    var atom = Instantiate(_spawnee, transform);
-                    atom.transform.Translate(new Vector3(xp, yp, zp));
+                    ++_numberOfAtoms;
+
+                    var atom = Instantiate(_spawnee, _physicsParent.transform);
+                    atom.transform.Translate(new Vector3(xp, zp, yp)); // <- order mixed up because the cylinders are rotated!
                     SetGlobalScale(atom.transform, new Vector3(size, size, size));
-                    atom.transform.parent = _physicsParent.transform;
                 }
             }
         }
     }
 
-    // Update is called once per frame
-    void Update()
+    // Start is called before the first frame update
+    void Start()
     {
-
+        _startPosition = _physicsParent.transform.position;
+//        Spawn();
     }
 }

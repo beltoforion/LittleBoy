@@ -7,8 +7,10 @@ namespace Assets.Scripts
 {
     public enum GameState
     {
-        Idle,
-        Running
+        Initialize,
+        WaitForStart,
+        Running, 
+        ShowScore
     };
 
     public enum AtomState

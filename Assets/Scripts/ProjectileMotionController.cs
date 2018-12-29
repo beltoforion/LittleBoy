@@ -4,12 +4,11 @@ using UnityEngine;
 
 public class ProjectileMotionController : MonoBehaviour
 {
-    public float _force;
-
     private Rigidbody _rb;
 
     public GameController _gameController;
 
+    bool _stopMotion = false;
 
     // Start is called before the first frame update
     void Start()
@@ -18,10 +17,9 @@ public class ProjectileMotionController : MonoBehaviour
         tag = "projectile";
     }
 
-    public void Reset()
+    public void ResetMotion()
     {
-        _force = 0;
-        _rb.velocity = Vector3.zero;
+        _stopMotion = false;
     }
 
     public void OnTriggerEnter(Collider other)
@@ -29,14 +27,21 @@ public class ProjectileMotionController : MonoBehaviour
         if (other.tag != "initiator")
             return;
 
-        Reset();
+        Debug.Log(string.Format("Stopping Projectile; Hit registered: {0} ({1})", other.name, other.tag));
+
+        _rb.velocity = Vector3.zero;
+        _stopMotion = true;
+        _gameController.RequestSimulationEnd();
     }
 
     private void FixedUpdate()
     {
-        //if (_gameController.GameState == GameState.Idle)
-        //    return;
+        if (_gameController == null || _gameController.GameState != GameState.Running)
+            return;
 
-        _rb.AddForce(new Vector3(0, 0, _force));
+        if (!_stopMotion)
+        {
+            _rb.AddForce(new Vector3(0, 0, _gameController._forceProjectile));
+        }
     }
 }

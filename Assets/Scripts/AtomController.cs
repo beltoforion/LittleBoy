@@ -10,21 +10,9 @@ using Random = UnityEngine.Random;
 
 public class AtomController : MonoBehaviour
 {
-    ///// <summary>
-    /////     Probability of a decay per second
-    ///// </summary>
-    private float _decayProbability;
-
-    /// <summary>
-    /// Length of a neutron Path.
-    /// </summary>
-    private float _neutronPathLength;
-
     private float _atomSize;
 
     private AtomState _state = AtomState.Alive;
-
-    private long _id = 0;
 
     private GameObject[] _neutron = { null, null };
 
@@ -38,8 +26,8 @@ public class AtomController : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        //if (_gameController==null || _gameController.GameState == GameState.Idle)
-        //    return;
+        if (_gameController == null || _gameController.GameState != GameState.Running)
+            return;
 
         if (collision.collider.tag != "neutron")
             return;
@@ -53,8 +41,8 @@ public class AtomController : MonoBehaviour
 
     public void OnTriggerEnter(Collider other)
     {
-        //if (_gameController==null || _gameController.GameState == GameState.Idle)
-        //    return;
+        if (_gameController==null || _gameController.GameState != GameState.Running)
+            return;
 
         if (other.tag != "neutron")
             return;
@@ -74,11 +62,7 @@ public class AtomController : MonoBehaviour
         _gameController = go.GetComponent("GameController") as GameController;
         Assert.IsNotNull(_gameController);
 
-        _decayProbability = _gameController._decayProbability;
-        _neutronPathLength = _gameController._neutronPathLength;
-
-        _id = _gameController.IncAtomCount();
-
+        var neutronPathLength = _gameController._neutronPathLength;
         const float deg2Rad = Mathf.PI / 180;
 
         // Scale the atom according to the scale property
@@ -89,7 +73,7 @@ public class AtomController : MonoBehaviour
         {
             _neutron[i] = this.gameObject.transform.GetChild(i).gameObject;
             var trans = _neutron[i].transform;
-            SetGlobalScale(trans, new Vector3(_atomSize * 0.2f, _neutronPathLength, _atomSize * 0.2f));
+            SetGlobalScale(trans, new Vector3(_atomSize * 0.2f, neutronPathLength, _atomSize * 0.2f));
 
             float rotx = Random.value * 360;
             float roty = 0;
@@ -97,7 +81,7 @@ public class AtomController : MonoBehaviour
 
             // Standardrichtungsvektor des Zylinders            
             var angles = new Vector3(rotx, roty, rotz);
-            var dir = Quaternion.Euler(angles) * new Vector3(0, _neutronPathLength, 0);
+            var dir = Quaternion.Euler(angles) * new Vector3(0, neutronPathLength, 0);
 
             //            Debug.Log(string.Format("angles: {0}, {1}, {2}; dir: {3}, {4}, {5}", angles.x, angles.y, angles.z, dir.x,dir.y,dir.z));
             trans.eulerAngles = angles;
@@ -125,11 +109,14 @@ public class AtomController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //if (_gameController.GameState == GameState.Idle)
-        //    return;
+        // no decay once simulation is stopped
+        if (_gameController == null || _gameController.GameState != GameState.Running)
+            return;
+
+        var decayProbability = _gameController._decayProbability;
 
         // Probability of a decay in the last frame cycle
-        var prob = Mathf.Pow((1 - _decayProbability), Time.deltaTime);
+        var prob = Mathf.Pow((1 - decayProbability), Time.deltaTime);
 
         switch (_state)
         {
@@ -145,7 +132,7 @@ public class AtomController : MonoBehaviour
 
             case AtomState.Decaying:
                 Destroy(this.gameObject);
-                _gameController.DecAtomCount();
+                _gameController.AtomDecayed();
                 _state = AtomState.Decayed;
                 break;
 
