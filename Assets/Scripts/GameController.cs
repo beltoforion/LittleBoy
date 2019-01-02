@@ -53,6 +53,8 @@ public class GameController : MonoBehaviour
 
     ProjectileMotionController _scriptProjectileMotion;
 
+    InitiatorController[] _scriptInitiator = { null, null, null, null };
+
 
     // Start is called before the first frame update
     void Start()
@@ -65,6 +67,11 @@ public class GameController : MonoBehaviour
         _scriptProjectile = GameObject.Find("Projectile").GetComponent<CylinderSpawn>();
         _scriptTarget = GameObject.Find("Target").GetComponent<CylinderSpawn>();
         _scriptProjectileMotion = GameObject.Find("ProjectileCylinder").GetComponent<ProjectileMotionController>();
+
+        _scriptInitiator[0] = GameObject.Find("Initiator1").GetComponent<InitiatorController>();
+        _scriptInitiator[1] = GameObject.Find("Initiator2").GetComponent<InitiatorController>();
+        _scriptInitiator[2] = GameObject.Find("Initiator3").GetComponent<InitiatorController>();
+        _scriptInitiator[3] = GameObject.Find("Initiator4").GetComponent<InitiatorController>();
     }
 
     public int AtomDecayed()
@@ -141,14 +148,14 @@ public class GameController : MonoBehaviour
                 int decayedAtomCount = _totalAtomCount - _atomCount;
                 _textStat.text = string.Format("Decayed atoms: {0,4:#####} of {1,4:#####} ({2:##} %)", decayedAtomCount, _totalAtomCount, _deacayedPercentage);
 
-                if (_requestSimulationEnd && (Time.time - _timeEndRequested) > 0.5)
+                if (_requestSimulationEnd && (Time.time - _timeEndRequested) > 1)
                 {
                     _requestSimulationEnd = false;
                     ShowScore();
                     _gameState = GameState.ShowScore;
                 }
 
-                Debug.Log(string.Format("Atoms alive={0}; Collisions={1}; dt={2}", _atomCount, _atomCollisionCount, Time.deltaTime));
+//                Debug.Log(string.Format("Atoms alive={0}; Collisions={1}; dt={2}", _atomCount, _atomCollisionCount, Time.deltaTime));
                 break;
 
             case GameState.ShowScore:
@@ -164,5 +171,6 @@ public class GameController : MonoBehaviour
     public void Fire()
     {
         _gameState = GameState.Running;
+        _scriptProjectileMotion.Fire();
     }
 }

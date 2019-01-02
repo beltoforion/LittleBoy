@@ -14,35 +14,37 @@ public class InitiatorController : MonoBehaviour
 
     private IList<GameObject> _neutronBeams;
 
-    private bool _neutronsActive = true;
-
-    private void ActivateNeutrons(bool activate)
+    public void FireNeutrons()
     {
-        foreach(var cyl in _neutronBeams)
-        {
-            var renderer = cyl.GetComponent<Renderer>();
-            renderer.enabled = activate;
-
-            var collider = cyl.GetComponent<CapsuleCollider>();
-            collider.enabled = activate;
-        }
-    }
-
-    public void OnTriggerEnter(Collider other)
-    {
-        if (_gameController == null || _gameController.GameState != Assets.Scripts.GameState.Running)
-            return;
-
-        Debug.Log(string.Format("Initiator triggered by {0}", other.name));
-
-        if (other.name!="ProjectileCylinder")
-            return;
-
         // activate neutrons
         ActivateNeutrons(true);
 
         // deactivate neutrons in 0.05 s
-        Invoke("DeactivateNeutrons", 0.05f);
+        Invoke("DeactivateNeutrons", 0.1f);
+    }
+
+    private void ActivateNeutrons(bool activate)
+    {
+        if (_neutronBeams == null || _neutronBeams.Count == 0)
+            return;
+
+        foreach(var cyl in _neutronBeams)
+        {
+            if (cyl == null)
+                continue;
+
+            var renderer = cyl.GetComponent<Renderer>();
+            if (renderer == null)
+                continue;
+
+            renderer.enabled = activate;
+
+            var collider = cyl.GetComponent<CapsuleCollider>();
+            if (collider == null)
+                continue;
+
+            collider.enabled = activate;
+        }
     }
 
     private void DeactivateNeutrons()
@@ -50,7 +52,7 @@ public class InitiatorController : MonoBehaviour
         ActivateNeutrons(false);
     }
 
-    // Start is called before the first frame update
+
     void Start()
     {
         var go = GameObject.Find("GameManager");
@@ -59,36 +61,42 @@ public class InitiatorController : MonoBehaviour
         _gameController = go.GetComponent("GameController") as GameController;
         Assert.IsNotNull(_gameController);
 
+        _neutronBeams = new List<GameObject>();
+
         // Create neutron beams
         float deltaAlpha = 90 / (_neutronRings + 1);
         float deltaBeta = 360 / _neutronsPerRing;
 
+        var neutronParent = new GameObject();
+        neutronParent.name = "NeutronBeamParent";
+        neutronParent.transform.parent = gameObject.transform;
+
         for (int n = 0; n < _neutronRings; ++n)
         {
-            var alpha = 90 - (n+1) * deltaAlpha;
+            var alpha = 90 - (n + 1) * deltaAlpha;
             for (int i = 0; i < _neutronsPerRing; ++i)
             {
                 var beta = i * deltaBeta;
 
-                var cylinder = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-                cylinder.name = "InitiatorNeutronBeam";
-                cylinder.transform.localScale = new Vector3(_gameController._atomSize * 0.2f, 
-                                                            _gameController._neutronPathLength, 
+                var neutronBeam = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                neutronBeam.name = "InitiatorNeutronBeam";
+                neutronBeam.transform.localScale = new Vector3(_gameController._atomSize * 0.2f,
+                                                            _gameController._neutronPathLength,
                                                             _gameController._atomSize * 0.2f);
-                cylinder.transform.Rotate(new Vector3(beta, 90, alpha));
-                cylinder.transform.position = transform.position + cylinder.transform.up * _gameController._neutronPathLength;
-                cylinder.tag = "neutron";
-                cylinder.transform.parent = gameObject.transform;
+                neutronBeam.transform.Rotate(new Vector3(beta, 90, alpha));
+                neutronBeam.transform.position = transform.position + neutronBeam.transform.up * _gameController._neutronPathLength;
+                neutronBeam.tag = "neutron";
+                neutronBeam.transform.parent = neutronParent.transform;
 
-                var renderer = cylinder.GetComponent<Renderer>();
+                var renderer = neutronBeam.GetComponent<Renderer>();
                 renderer.material = _matNeutron;
                 renderer.enabled = false;
 
-                var collider = cylinder.GetComponent<CapsuleCollider>();
-                //collider.isTrigger = true;
+                var collider = neutronBeam.GetComponent<CapsuleCollider>();
+                collider.isTrigger = true;
                 collider.enabled = false;
 
-//                _neutronBeams.Add(cylinder);
+                _neutronBeams.Add(neutronBeam);
             }
         }
     }

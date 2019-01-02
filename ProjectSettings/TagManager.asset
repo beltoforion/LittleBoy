@@ -4,7 +4,9 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - initiator
+  - atom
+  - neutron
+  - projectile_aware
   layers:
   - Default
   - TransparentFX
