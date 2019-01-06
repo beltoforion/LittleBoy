@@ -26,6 +26,33 @@ public class GameController : MonoBehaviour
 
     public float _forceProjectile = -0.5f;
 
+    public void SetScaledDecayProb(float perc)
+    {
+        if (perc < 0.2)
+        {
+            _decayProbability = 0;
+            Debug.Log(string.Format("val={0}", _decayProbability));
+        }
+        else
+        {
+            float min = 0.001f;
+            float max = 0.1f;
+
+            float axisMin = Mathf.Log10(min);
+            float axisMax = Mathf.Log10(max);
+
+            float ds = (axisMax - axisMin) / 100;
+            float val = Mathf.Pow(10, axisMin + perc * ds);
+
+            _decayProbability = val;
+
+            Debug.Log(string.Format("axisMin={0}; axisMax={1}; perc={2}; ds={3}; val={4}", axisMin, axisMax, perc, ds, val));
+        }
+
+        var valueText = GameObject.Find("DecayProbLabel").GetComponent<Text>();
+        valueText.text = string.Format("{0:0.0000} %/s", _decayProbability);
+    }
+
     internal int _totalAtomCount = 0;
 
     internal int _atomCount = 0;
@@ -72,6 +99,11 @@ public class GameController : MonoBehaviour
         _scriptInitiator[1] = GameObject.Find("Initiator2").GetComponent<InitiatorController>();
         _scriptInitiator[2] = GameObject.Find("Initiator3").GetComponent<InitiatorController>();
         _scriptInitiator[3] = GameObject.Find("Initiator4").GetComponent<InitiatorController>();
+
+        // set spont fission slider properly
+
+        var slider = GameObject.Find("SpontFissionProbSlider").GetComponent<Slider>();
+        SetScaledDecayProb(slider.value);
     }
 
     public int AtomDecayed()
